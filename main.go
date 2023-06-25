@@ -3,14 +3,21 @@ package main
 import (
 	"booking-app/m/v2/helper"
 	"fmt"
-	"strconv"
+	"time"
 )
 
 const conferenceTickets int = 50
 
 var conferenceName = "Go Conference"
 var remainingTickets uint = 50
-var bookings = make([]map[string]string, 0)
+var bookings = make([]UserData, 0)
+
+type UserData struct {
+	firstName       string
+	lastName        string
+	email           string
+	numberOfTickets uint
+}
 
 func main() {
 
@@ -29,6 +36,7 @@ func main() {
 
 		if userTickets <= remainingTickets {
 			bookTickets(userTickets, firstname, lastname, email)
+			go sendTicket(userTickets, firstname, lastname, email)
 
 			firstnames := getFirstName()
 			fmt.Printf("The first name of booking are: %v\n", firstnames)
@@ -58,8 +66,7 @@ func getFirstName() []string {
 	firstnames := []string{}
 
 	for _, booking := range bookings {
-		var name = booking["firstName"]
-		firstnames = append(firstnames, name)
+		firstnames = append(firstnames, booking.firstName)
 	}
 
 	return firstnames
@@ -89,13 +96,22 @@ func getUserInputs() (string, string, string, uint) {
 
 func bookTickets(userTickets uint, firstname string, lastname string, email string) {
 
-	var userData = make(map[string]string)
-	userData["firstName"] = firstname
-	userData["lastName"] = lastname
-	userData["email"] = email
-	userData["numberOfTickets"] = strconv.FormatUint(uint64(userTickets), 10)
+	var userData = UserData{
+		firstName:       firstname,
+		lastName:        lastname,
+		email:           email,
+		numberOfTickets: userTickets,
+	}
 
 	remainingTickets = remainingTickets - userTickets
 	bookings = append(bookings, userData)
 
+}
+
+func sendTicket(userTickets uint, firstname string, lastname string, email string) {
+	time.Sleep(10 * time.Second)
+	tickets := fmt.Sprintf("%v tikcets for %v %v", userTickets, firstname, lastname)
+	fmt.Println("#####################")
+	fmt.Printf("Sending ticket: \n %v \n to email address %v", tickets, email)
+	fmt.Println("#####################")
 }
