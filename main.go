@@ -3,6 +3,7 @@ package main
 import (
 	"booking-app/m/v2/helper"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -19,39 +20,38 @@ type UserData struct {
 	numberOfTickets uint
 }
 
+var wg = sync.WaitGroup{}
+
 func main() {
 
 	greetUsers()
 
-	for remainingTickets > 0 {
+	firstname, lastname, email, userTickets := getUserInputs()
 
-		firstname, lastname, email, userTickets := getUserInputs()
+	isValidName := helper.IsValidName(firstname, lastname)
 
-		isValidName := helper.IsValidName(firstname, lastname)
-
-		if !isValidName {
-			fmt.Println("Inputs are not valid, Please try again. ")
-			continue
-		}
-
-		if userTickets <= remainingTickets {
-			bookTickets(userTickets, firstname, lastname, email)
-			go sendTicket(userTickets, firstname, lastname, email)
-
-			firstnames := getFirstName()
-			fmt.Printf("The first name of booking are: %v\n", firstnames)
-
-			if remainingTickets == 0 {
-				fmt.Print("Our conference is booked out.")
-				break
-			}
-
-		} else {
-			fmt.Printf("We only have %v tickets, You can not book %v tickets.", remainingTickets, userTickets)
-		}
-
+	if !isValidName {
+		fmt.Println("Inputs are not valid, Please try again. ")
 	}
 
+	if userTickets <= remainingTickets {
+		bookTickets(userTickets, firstname, lastname, email)
+
+		wg.Add(1)
+		go sendTicket(userTickets, firstname, lastname, email)
+
+		firstnames := getFirstName()
+		fmt.Printf("The first name of booking are: %v\n", firstnames)
+
+		if remainingTickets == 0 {
+			fmt.Print("Our conference is booked out.")
+		}
+
+	} else {
+		fmt.Printf("We only have %v tickets, You can not book %v tickets.", remainingTickets, userTickets)
+	}
+
+	wg.Wait()
 }
 
 func greetUsers() {
@@ -114,4 +114,6 @@ func sendTicket(userTickets uint, firstname string, lastname string, email strin
 	fmt.Println("#####################")
 	fmt.Printf("Sending ticket: \n %v \n to email address %v", tickets, email)
 	fmt.Println("#####################")
+
+	wg.Done()
 }
