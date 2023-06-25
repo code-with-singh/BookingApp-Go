@@ -1,15 +1,16 @@
 package main
 
 import (
+	"booking-app/m/v2/helper"
 	"fmt"
-	"strings"
+	"strconv"
 )
 
 const conferenceTickets int = 50
 
 var conferenceName = "Go Conference"
 var remainingTickets uint = 50
-var bookings = []string{}
+var bookings = make([]map[string]string, 0)
 
 func main() {
 
@@ -19,8 +20,18 @@ func main() {
 
 		firstname, lastname, email, userTickets := getUserInputs()
 
+		isValidName := helper.IsValidName(firstname, lastname)
+
+		if !isValidName {
+			fmt.Println("Inputs are not valid, Please try again. ")
+			continue
+		}
+
 		if userTickets <= remainingTickets {
-			bookTickets(bookings, remainingTickets, userTickets, firstname, lastname, email)
+			bookTickets(userTickets, firstname, lastname, email)
+
+			firstnames := getFirstName()
+			fmt.Printf("The first name of booking are: %v\n", firstnames)
 
 			if remainingTickets == 0 {
 				fmt.Print("Our conference is booked out.")
@@ -29,7 +40,6 @@ func main() {
 
 		} else {
 			fmt.Printf("We only have %v tickets, You can not book %v tickets.", remainingTickets, userTickets)
-			continue
 		}
 
 	}
@@ -48,9 +58,8 @@ func getFirstName() []string {
 	firstnames := []string{}
 
 	for _, booking := range bookings {
-		var name = strings.Fields(booking)
-		var firstname = name[0]
-		firstnames = append(firstnames, firstname)
+		var name = booking["firstName"]
+		firstnames = append(firstnames, name)
 	}
 
 	return firstnames
@@ -78,10 +87,15 @@ func getUserInputs() (string, string, string, uint) {
 	return firstname, lastname, email, userTickets
 }
 
-func bookTickets(bookings []string, userTickets uint, firstname string, lastname string, email string) {
-	remainingTickets = remainingTickets - userTickets
-	bookings = append(bookings, firstname+" "+lastname+" "+email)
+func bookTickets(userTickets uint, firstname string, lastname string, email string) {
 
-	firstnames := getFirstName()
-	fmt.Printf("The first name of booking are: %v\n", firstnames)
+	var userData = make(map[string]string)
+	userData["firstName"] = firstname
+	userData["lastName"] = lastname
+	userData["email"] = email
+	userData["numberOfTickets"] = strconv.FormatUint(uint64(userTickets), 10)
+
+	remainingTickets = remainingTickets - userTickets
+	bookings = append(bookings, userData)
+
 }
